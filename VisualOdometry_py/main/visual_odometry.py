@@ -10,13 +10,14 @@ from tqdm import tqdm
 import time
 from numba import jit
 
-class VisualOdometry():
+
+class VisualOdometry:
     def __init__(self, data_dir):
-        self.K, self.P = self._load_calib(os.path.join(data_dir, 'calib.txt'))  # 카메라 캘리브레이션 값 load
-        self.gt_poses = self._load_poses(os.path.join(data_dir,"poses.txt"))    # Ground Truth pose load
-        self.images = self._load_images(os.path.join(data_dir,"image_l"))       # KITTI 주행 이미지 load
-        self.orb = cv2.ORB_create(3000)                                         # ORB 알고리즘을 사용하는 ORB 객체 생성. 최대 feature 수 = 3000 
-        FLANN_INDEX_LSH = 6                                                     
+        self.K, self.P = self._load_calib(os.path.join(data_dir, "calib.txt"))  # 카메라 캘리브레이션 값 load
+        self.gt_poses = self._load_poses(os.path.join(data_dir, "poses.txt"))  # Ground Truth pose load
+        self.images = self._load_images(os.path.join(data_dir, "image_l"))  # KITTI 주행 이미지 load
+        self.orb = cv2.ORB_create(3000)  # ORB 알고리즘을 사용하는 ORB 객체 생성. 최대 feature 수 = 3000
+        FLANN_INDEX_LSH = 6
         index_params = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1)
         search_params = dict(checks=50)
         self.flann = cv2.FlannBasedMatcher(indexParams=index_params, searchParams=search_params)
@@ -34,10 +35,11 @@ class VisualOdometry():
         K (ndarray): Intrinsic parameters
         P (ndarray): Projection matrix
         """
-        with open(filepath, 'r') as f:
-            params = np.fromstring(f.readline(), dtype=np.float64, sep=' ')
+        with open(filepath, "r") as f:
+            params = np.fromstring(f.readline(), dtype=np.float64, sep=" ")
             P = np.reshape(params, (3, 4))
             K = P[0:3, 0:3]
+
         return K, P
 
     @staticmethod
@@ -54,11 +56,12 @@ class VisualOdometry():
         poses (ndarray): The GT poses
         """
         poses = []
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             for line in f.readlines():
-                T = np.fromstring(line, dtype=np.float64, sep=' ')
+                T = np.fromstring(line, dtype=np.float64, sep=" ")
                 T = T.reshape(3, 4)
                 T = np.vstack((T, [0, 0, 0, 1]))
+                print(T)
                 poses.append(T)
         return poses
 
@@ -96,7 +99,7 @@ class VisualOdometry():
         T[:3, :3] = R
         T[:3, 3] = t
         return T
-    
+
     def get_matches(self, i):
         """
         This function detect and compute keypoints and descriptors from the i-1'th and i'th image using the class orb object
@@ -125,12 +128,9 @@ class VisualOdometry():
         except ValueError:
             pass
 
-        draw_params = dict(matchColor = -1, # draw matches in green color
-                 singlePointColor = None,
-                 matchesMask = None, # draw only inliers
-                 flags = 2)
+        draw_params = dict(matchColor=-1, singlePointColor=None, matchesMask=None, flags=2)  # draw matches in green color  # draw only inliers
 
-        img3 = cv2.drawMatches(self.images[i], kp1, self.images[i-1],kp2, good ,None,**draw_params)
+        img3 = cv2.drawMatches(self.images[i], kp1, self.images[i - 1], kp2, good, None, **draw_params)
         cv2.imshow("image", img3)
         cv2.waitKey(200)
 
@@ -138,7 +138,7 @@ class VisualOdometry():
         q1 = np.float32([kp1[m.queryIdx].pt for m in good])
         q2 = np.float32([kp2[m.trainIdx].pt for m in good])
         return q1, q2
-    
+
     def get_pose(self, q1, q2):
         """
         Calculates the transformation matrix
@@ -176,6 +176,7 @@ class VisualOdometry():
         -------
         right_pair (list): Contains the rotation matrix and translation vector
         """
+
         def sum_z_cal_relative_scale(R, t):
             # Get the transformation matrix
             T = self._form_transf(R, t)
@@ -196,8 +197,7 @@ class VisualOdometry():
             sum_of_pos_z_Q2 = sum(uhom_Q2[2, :] > 0)
 
             # Form point pairs and calculate the relative scale
-            relative_scale = np.mean(np.linalg.norm(uhom_Q1.T[:-1] - uhom_Q1.T[1:], axis=-1)/
-                                     np.linalg.norm(uhom_Q2.T[:-1] - uhom_Q2.T[1:], axis=-1))
+            relative_scale = np.mean(np.linalg.norm(uhom_Q1.T[:-1] - uhom_Q1.T[1:], axis=-1) / np.linalg.norm(uhom_Q2.T[:-1] - uhom_Q2.T[1:], axis=-1))
             return sum_of_pos_z_Q1 + sum_of_pos_z_Q2, relative_scale
 
         # Decompose the essential matrix
@@ -226,7 +226,7 @@ class VisualOdometry():
 
 
 def main():
-    data_dir = "C:\\Users\\Autonav\\github_repo\\SLAM\\VisualOdometry_py\\main\\KITTI_sequence_1"  # Try KITTI_sequence_2 too
+    data_dir = "C:\\github_repo\\SLAM\\VisualOdometry_py\\main\\KITTI_sequence_1"  # Try KITTI_sequence_2 too
     vo = VisualOdometry(data_dir)
 
     play_trip(vo.images)  # Comment out to not play the trip
