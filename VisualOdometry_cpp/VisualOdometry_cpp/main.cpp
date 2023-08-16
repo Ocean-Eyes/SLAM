@@ -144,6 +144,7 @@ int main()
 	fs::path data_dir = "C:\\github_repo\\SLAM\\VisualOdometry_cpp\\VisualOdometry_cpp\\KITTI_sequence_1";
 	VisualOdometry vo(data_dir);
 
+	cout << vo.gt_poses.size() << endl;
 
 	return 0;
 }
