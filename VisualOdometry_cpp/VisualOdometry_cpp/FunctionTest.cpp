@@ -187,8 +187,8 @@ void detect_keypoint()
 
 	cv::Mat dst;															// store the result into dst after drawing keypoint on src
 	drawKeypoints(src, keypoints, dst, cv::Scalar::all(-1),
-		cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-
+		cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);							// The size of circle indicate the size of area considered when feature detection operated
+																			// The line from each center of the circle indicates dominant direction around feature point
 	cv::imshow("src", src);
 	cv::imshow("dst", dst);
 

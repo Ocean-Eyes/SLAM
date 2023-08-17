@@ -134,9 +134,10 @@ class VisualOdometry:
         cv2.imshow("image", img3)
         cv2.waitKey(200)
 
-        # Get the image points form the good matches
+        # Get the image points from the good matches
         q1 = np.float32([kp1[m.queryIdx].pt for m in good])
         q2 = np.float32([kp2[m.trainIdx].pt for m in good])
+
         return q1, q2
 
     def get_pose(self, q1, q2):
