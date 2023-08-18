@@ -61,7 +61,6 @@ class VisualOdometry:
                 T = np.fromstring(line, dtype=np.float64, sep=" ")
                 T = T.reshape(3, 4)
                 T = np.vstack((T, [0, 0, 0, 1]))
-                print(T)
                 poses.append(T)
         return poses
 
@@ -137,7 +136,7 @@ class VisualOdometry:
         # Get the image points from the good matches
         q1 = np.float32([kp1[m.queryIdx].pt for m in good])
         q2 = np.float32([kp2[m.trainIdx].pt for m in good])
-
+        print(q1.shape)
         return q1, q2
 
     def get_pose(self, q1, q2):
@@ -181,18 +180,19 @@ class VisualOdometry:
         def sum_z_cal_relative_scale(R, t):
             # Get the transformation matrix
             T = self._form_transf(R, t)
+
             # Make the projection matrix
             P = np.matmul(np.concatenate((self.K, np.zeros((3, 1))), axis=1), T)
 
             # Triangulate the 3D points
             hom_Q1 = cv2.triangulatePoints(self.P, P, q1.T, q2.T)
+
             # Also seen from cam 2
             hom_Q2 = np.matmul(T, hom_Q1)
 
             # Un-homogenize
             uhom_Q1 = hom_Q1[:3, :] / hom_Q1[3, :]
             uhom_Q2 = hom_Q2[:3, :] / hom_Q2[3, :]
-
             # Find the number of points there has positive z coordinate in both cameras
             sum_of_pos_z_Q1 = sum(uhom_Q1[2, :] > 0)
             sum_of_pos_z_Q2 = sum(uhom_Q2[2, :] > 0)
