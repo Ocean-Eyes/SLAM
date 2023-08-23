@@ -3,12 +3,12 @@
 #include <tuple>
 #include <fstream>
 #include <filesystem>
-#include <opencv2/highgui.hpp>
-#include <opencv2/features2d.hpp>
-#include <opencv2/calib3d.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/plot.hpp>
+#include "matplotlibcpp.h"
 
 namespace fs = std::filesystem;
+namespace plt = matplotlibcpp;
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -16,6 +16,9 @@ using std::vector;
 using std::string;
 using std::ifstream;
 using cv::Mat;
+
+void plot_path(vector<std::tuple<double, double>> gt_path, vector<std::tuple<double, double>> estimated_path);
+
 
 class VisualOdometry 
 {
@@ -294,6 +297,23 @@ std::pair<Mat, Mat> VisualOdometry::decomp_essential_mat(Mat E, Mat q1, Mat q2)
 }
 
 
+void plot_path(vector<std::tuple<double, double>> gt_path, vector<std::tuple<double, double>> estimated_path)
+{
+	vector<double> gt_x(gt_path.size()), gt_y(gt_path.size());
+	vector<double> estimated_x(estimated_path.size()), estimated_y(estimated_path.size());
+
+	for (size_t i = 0; i < gt_path.size(); ++i)
+	{
+		gt_x[i] = std::get<0>(gt_path[i]);
+		gt_y[i] = std::get<1>(gt_path[i]);
+		estimated_x[i] = std::get<0>(estimated_path[i]);
+		estimated_y[i] = std::get<1>(estimated_path[i]);
+	}
+
+	plt::plot(gt_x, gt_y, "b");
+	plt::plot(estimated_x, estimated_y, "r");
+	plt::show();
+}
 
 int main()
 {
@@ -325,6 +345,8 @@ int main()
 		gt_path.push_back(cur_gt_path);
 		estimated_path.push_back(cur_estimated_path);
 	}
+
+	plot_path(gt_path, estimated_path);
 
 	return 0;
 }
